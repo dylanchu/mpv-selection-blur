@@ -1,10 +1,12 @@
 ## Introduction
 
-This mpv player plugin is used to blur any area you slected. It is written in lua script.
+This mpv player plugin written in lua script is used to blur any area you slected. And it can adjust blur weight automatically according to the size of the area you selected.
 
 To install it, just download the file to your mpv scripts folder. (That is `~/.config/mpv/scripts/` on Linux)
 
-该mpv播放器插件用来模糊任意你选定的区域。直接下载该文件到mpv的scripts文件夹即可使用。
+该mpv播放器插件用来模糊你选定的任意区域。它会根据选区的大小自动调整模糊的程度。
+
+直接下载该文件到mpv的scripts文件夹即可使用。
 
 
 
@@ -18,7 +20,7 @@ You may find it useful to cover the built-in subtitle you don't what to see. For
 
 ## Usage
 
-Keyboard button `b` is used toggle it on/off by default. (You can specify another key if you like.)
+By default keyboard button `b` is used to toggle it on/off.  (You can assign another key if you like)
 
 Press key `b` and click on the first corner. Then move mouse to another corner and click again.
 
