@@ -309,7 +309,7 @@ function blur_crop_area(x, y, w, h)
     if(h<10) then h = 10 end
     local weight_limit = math.floor((w<h and w or h) / 5)
     local weight = weight_limit<25 and weight_limit or 25
-    local blur_area = string.format('[a]crop=%s:%s:%s:%s,boxblur=%s[fg]',w, h, x, y, weight)
+    local blur_area = string.format('[a]crop=%s:%s:%s:%s,boxblur=%s[fg]',w+math.ceil(weight/2), h+math.ceil(weight/2), x, y, weight)
     local place_at = string.format('[b][fg]overlay=%s:%s[vo]', x, y)
     local ss = string.format('[vid1]split=2[a][b];%s;%s', blur_area, place_at)
     set_lavfi_complex(ss)
