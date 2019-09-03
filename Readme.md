@@ -34,4 +34,4 @@ Press key `b` and click on the first corner. Then move mouse to another corner a
 
 > https://superuser.com/questions/901099/ffmpeg-apply-blur-over-face
 
-Crop and lavfi setting codes takes from [here](https://github.com/occivink/mpv-scripts).
+Crop and lavfi setting codes are taken from [here](https://github.com/occivink/mpv-scripts).
