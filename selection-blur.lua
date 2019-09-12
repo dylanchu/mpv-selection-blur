@@ -300,7 +300,7 @@ function set_lavfi_complex(filter)
     mp.set_property("sub", sub)
 end
 
-selection_blured = 0
+local selection_blur_type = 0
 function blur_crop_area(x, y, w, h)
     local height = mp.get_property_number("video-params/h")
     local width = mp.get_property_number("video-params/w")
@@ -309,11 +309,25 @@ function blur_crop_area(x, y, w, h)
     if(h<10) then h = 10 end
     local weight_limit = math.floor((w<h and w or h) / 5)
     local weight = weight_limit<25 and weight_limit or 25
-    local blur_area = string.format('[a]crop=%s:%s:%s:%s,boxblur=%s[fg]',w+math.ceil(weight/2), h+math.ceil(weight/2), x, y, weight)
-    local place_at = string.format('[b][fg]overlay=%s:%s[vo]', x, y)
-    local ss = string.format('[vid1]split=2[a][b];%s;%s', blur_area, place_at)
+    local fg_str = string.format('[a]crop=%s:%s:%s:%s,boxblur=%s[fg]',w+math.ceil(weight/2), h+math.ceil(weight/2), x, y, weight)
+    local overlay_str = string.format('[b][fg]overlay=%s:%s[vo]', x, y)
+    local ss = string.format('[vid1]split=2[a][b];%s;%s', fg_str, overlay_str)
     set_lavfi_complex(ss)
-    selection_blured = 1
+end
+
+function reverse_blur_crop_area(x, y, w, h)
+    local height = mp.get_property_number("video-params/h")
+    local width = mp.get_property_number("video-params/w")
+
+    if(w<10) then w = 10 end
+    if(h<10) then h = 10 end
+    local weight_limit = math.floor((width<height and width or height) / 5)
+    local weight = weight_limit<32 and weight_limit or 32
+    local fg_str = string.format('[a]crop=%s:%s:%s:%s[fg]',w+math.ceil(weight/2), h+math.ceil(weight/2), x, y)
+    local overlay_str = string.format('[bg][fg]overlay=%s:%s[vo]', x, y)
+    local bg_str = string.format('[b]crop=%s:%s,boxblur=%s[bg]', width, height, weight)
+    local ss = string.format('[vid1]split=2[a][b];%s;%s;%s', fg_str, bg_str, overlay_str)
+    set_lavfi_complex(ss)
 end
 
 function update_crop_zone_state()
@@ -329,7 +343,11 @@ function update_crop_zone_state()
         needs_drawing = true
     else
         local c1, c2 = sort_corners(crop_first_corner, corner_video)
-        blur_crop_area(c1.x, c1.y, c2.x - c1.x, c2.y - c1.y)
+        if selection_blur_type == 1 then
+            blur_crop_area(c1.x, c1.y, c2.x - c1.x, c2.y - c1.y)
+        elseif selection_blur_type == 2 then
+            reverse_blur_crop_area(c1.x, c1.y, c2.x - c1.x, c2.y - c1.y)
+        end
         cancel_crop()
     end
 end
@@ -398,12 +416,6 @@ local properties = {
 
 function start_crop()
     if not mp.get_property("video-out-params", nil) then return end
-    local hwdec = mp.get_property("hwdec-current")
-    if hwdec and hwdec ~= "no" and not string.find(hwdec, "-copy$") then
-        msg.error("Cannot crop with hardware decoding active (see manual)")
-        return
-    end
-
     crop_cursor.x, crop_cursor.y = mp.get_mouse_pos()
     needs_drawing = true
     dimensions_changed = true
@@ -419,15 +431,29 @@ function start_crop()
     end
 end
 
-function toggle_blur_selection()
-    print(selection_blured)
-    if selection_blured == 1 then
+function toggle_selection_blur()
+    print(selection_blur_type)
+    if selection_blur_type ~= 0 then
         set_lavfi_complex()
-        selection_blured = 0
+        selection_blur_type = 0
     else
+        selection_blur_type = 1
         start_crop()
     end
 end
 
--- mp.add_key_binding(nil, "toggle-blur-selection", toggle_blur_selection)
-mp.add_key_binding('b', "toggle-blur-selection", toggle_blur_selection)
+function toggle_reverse_selection_blur()
+    print(selection_blur_type)
+    if selection_blur_type ~= 0 then
+        set_lavfi_complex()
+        selection_blur_type = 0
+    else
+        selection_blur_type = 2
+        start_crop()
+    end
+end
+
+-- mp.add_key_binding(nil, "toggle-selection-blur", toggle_selection_blur)
+-- mp.add_key_binding(nil, "toggle-reverse-selection-blur", toggle_reverse_selection_blur)
+mp.add_key_binding('b', "toggle-blur-selection", toggle_selection_blur)
+mp.add_key_binding('ctrl+b', "toggle-reverse-blur-selection", toggle_reverse_selection_blur)
